@@ -65,37 +65,6 @@ unsigned char** padding(unsigned char** in, int n_height, int n_width, int n_fil
 	return pad;
 }
 
-void smooth_filter(unsigned char **in)
-{
-	unsigned char** pad = padding(in, Y_MAX, X_MAX, 3);// 패딩 생성
-	unsigned char** out = mem_alloc2_d(Y_MAX, X_MAX, 0);//출력용 배열
-	int pad_size = 1;
-	double mask[3][3] = {//filter 행렬
-	{ (double)1 / 16, (double)2 / 16, (double)1 / 16 },
-	{ (double)2 / 16 , (double)4 / 16 , (double)2 / 16 },
-	{ (double)1 / 16, (double)2 / 16 , (double)1 / 16}
-	};
-	for (int h = 0; h < Y_MAX; h++)
-	{
-		for (int w = 0; w < X_MAX; w++)
-		{
-			double pixel_value = 0;
-
-			for (int i = -pad_size; i <= pad_size; i++)
-				for (int j = -pad_size; j <= pad_size; j++)
-					pixel_value += pad[h + (i + pad_size)][w + (j + pad_size)] * ((double)mask[i + pad_size][j + pad_size]);
-			out[h][w] = (int)pixel_value;
-		}
-	}
-	string output = "filter3";
-	output.append(".raw");
-	FILE* outfile = fopen(output.c_str(), "w+b");
-	for (int i = 0; i < Y_MAX; i++)
-	{
-		fwrite(out[i], sizeof(char), X_MAX, outfile);
-	}
-	fclose(outfile);
-}
 typedef struct _RGB {
 	unsigned char r;//받을때 bgr순서라서 이렇게 함
 	unsigned char g;
@@ -187,23 +156,58 @@ int readBMPheader(int &nHeight_in, int &nWidth_in, string file_name)
 }
 int WhiteBalancing(unsigned char** r, unsigned char** g, unsigned char** b, int nHeight_in, int nWidth_in)
 {
-	int r_value = 208;
-	int g_value = 187;
-	int b_value = 190;
+	int r_value = 190;
+	int g_value = 142;
+	int b_value = 66;
 	int radius = 80;
 	for (int h = 0; h < nHeight_in; h++)
 	{
 		for (int w = 0; w < nWidth_in; w++)
 		{
-			/*r[h][w] = 0;
-
-			b[h][w] = 0;
-			g[h][w] = 0;
-*/
-//208 187 190
-			if ((r[h][w] - r_value)*(r[h][w] - r_value) + (g[h][w] - g_value)*(g[h][w] - g_value) + (b[h][w] - b_value)*(b[h][w] - b_value) > radius*radius)
+			if (r[h][w] <= 190)
 			{
-				r[h][w] = g[h][w] = b[h][w] = 0;
+				r[h][w] = (r[h][w])*255.0 / 190.0;
+			}
+			else {
+				r[h][w] = 255;
+
+			}
+			if (r[h][w] > 255)
+				r[h][w] = 255;
+			else if (r[h][w] <= 0)
+			{
+				r[h][w] = 0;
+
+			}
+			if (g[h][w] <= 142)
+			{
+				g[h][w] = (g[h][w])*255.0 / 142.0;
+			}
+			else {
+				g[h][w] = 255;
+
+			}
+			if (g[h][w] > 255)
+				g[h][w] = 255;
+			else if (g[h][w] <= 0)
+			{
+				g[h][w] = 0;
+
+			}
+			if (b[h][w] <= 66)
+			{
+				b[h][w] = (b[h][w])*255.0 / 66.0;
+			}
+			else {
+				b[h][w] = 255;
+
+			}
+			if (b[h][w] > 255)
+				b[h][w] = 255;
+			else if (g[h][w] <= 0)
+			{
+				g[h][w] = 0;
+
 			}
 		}
 	}
@@ -213,7 +217,7 @@ int main(void)
 {
 	int nHeight_in = 0;
 	int nWidth_in = 0;
-	string filename = "white.bmp";
+	string filename = "input2.bmp";
 	readBMPheader(nWidth_in, nHeight_in, filename);
 	unsigned char**ch_in_r = mem_alloc2_d(nHeight_in, nWidth_in, 0);//rgb가 아니라 bgr로 들어오는것 같기도 하다. 한번 알아보고 해야겠다.
 	unsigned char**ch_in_g = mem_alloc2_d(nHeight_in, nWidth_in, 0);
